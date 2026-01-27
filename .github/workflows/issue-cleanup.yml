@@ -1,0 +1,51 @@
+name: Issue Cleanup
+
+on:
+  issues:
+    types: [opened]
+
+jobs:
+  cleanup:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check issue author
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const issue = context.payload.issue;
+            const repo = context.repo;
+            
+            // Get the repository owner
+            const repoOwner = repo.owner.toLowerCase();
+            const issueAuthor = issue.user.login.toLowerCase();
+            
+            console.log(`Repository owner: ${repoOwner}`);
+            console.log(`Issue author: ${issueAuthor}`);
+            
+            // If the issue was not created by the repository owner, delete it
+            if (issueAuthor !== repoOwner) {
+              console.log(`Deleting issue #${issue.number} - created by ${issueAuthor}, not the owner ${repoOwner}`);
+              
+              // Close the issue first (required before deletion)
+              await github.rest.issues.update({
+                owner: repo.owner,
+                repo: repo.repo,
+                issue_number: issue.number,
+                state: 'closed'
+              });
+              
+              // Delete the issue using GraphQL
+              await github.graphql(`
+                mutation($issueId: ID!) {
+                  deleteIssue(input: {issueId: $issueId}) {
+                    clientMutationId
+                  }
+                }
+              `, {
+                issueId: issue.node_id
+              });
+              
+              console.log(`Issue #${issue.number} deleted successfully`);
+            } else {
+              console.log(`Issue #${issue.number} created by owner - keeping it`);
+            }

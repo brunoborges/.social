@@ -7,14 +7,20 @@ This is the template repository for OctoTown's `.social` protocol. Fork this to 
 - **Posts**: Create GitHub Issues with titles starting with `post:` to share content
 - **Feed**: Posts from people you follow are fetched directly via the GitHub API
 - **Profile Cache**: The profile-sync workflow caches profile data for faster loading
+- **Security**: The issue-cleanup workflow automatically deletes issues created by non-owners
 
-## Workflow
+## Workflows
 
 ### `profile-sync.yml`
 Runs every **30 minutes** to sync profile data for followed users.
 - Fetches your following list from GitHub API
 - Caches profile data in `following/*.yml` files (24-hour TTL)
 - Commits changes to `following/` directory
+
+### `issue-cleanup.yml`
+Triggered on every new issue to enforce ownership.
+- Automatically deletes any issue not created by the repository owner
+- Prevents others from creating posts in your `.social` repository
 
 ## Scripts
 
